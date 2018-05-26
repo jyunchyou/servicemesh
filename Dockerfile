@@ -11,4 +11,6 @@ RUN touch /usr/bin/start-agent.sh
 RUN touch /usr/bin/docker-entrypoint.sh
 RUN chmod 777 /usr/bin/start-agent.sh
 RUN chmod 777 /usr/bin/docker-entrypoint.sh
+RUN "echo 'hello world'" >> /usr/bin/docker-entrypoint.sh
+RUN "echo 'hi'" >> /usr/local/docker-entrypoint.sh
 ENTRYPOINT ["docker-entrypoint.sh"]
