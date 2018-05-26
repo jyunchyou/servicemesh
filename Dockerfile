@@ -1,14 +1,18 @@
-FROM ubuntu:14.04
+# Runner container
+FROM registry.cn-hangzhou.aliyuncs.com/aliware2018/debian-jdk8
 
-MAINTAINER jyunchyou “jyunchyou@gmail.com”
-RUN apt update
-RUN apt install git 
-RUN y
-RUN cd /root
-RUN git clone https://code.aliyun.com/middlewarerace2018/services.git
-RUN git clone https://code.aliyun.com/middlewarerace2018/agent-demo.git
-RUN cp /root/services/docker-entrypoint.sh /usr/bin
-RUN cp /root/services/docker-entrypoint.sh /usr/local/bin
-RUN cp /root/agent-demo/start-agent.sh /usr/bin
-RUN cp /root/agent-demo/start-agent.sh /usr/local/bin
+COPY --from=builder /root/workspace/services/mesh-provider/target/mesh-provider-1.0-SNAPSHOT.jar /root/dists/mesh-provider.jar
+COPY --from=builder /root/workspace/services/mesh-consumer/target/mesh-consumer-1.0-SNAPSHOT.jar /root/dists/mesh-consumer.jar
+COPY --from=builder /root/workspace/agent/mesh-agent/target/mesh-agent-1.0-SNAPSHOT.jar /root/dists/mesh-agent.jar
+
+COPY --from=builder /usr/local/bin/docker-entrypoint.sh /usr/local/bin
+COPY start-agent.sh /usr/local/bin
+
+RUN set -ex \
+ && chmod a+x /usr/local/bin/start-agent.sh \
+ && mkdir -p /root/logs
+
+EXPOSE 8087
+
 ENTRYPOINT ["docker-entrypoint.sh"]
+
