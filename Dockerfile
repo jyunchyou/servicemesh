@@ -1,15 +1,13 @@
-FROM centos
+FROM ubuntu:14.04
 
 MAINTAINER jyunchyou “jyunchyou@gmail.com”
-RUN touch /usr/local/bin/start-agent.sh
-
-RUN touch /usr/local/bin/docker-entrypoint.sh
-RUN chmod 777 /usr/local/bin/docker-entrypoint.sh
-RUN chmod 777 /usr/local/bin/start-agent.sh
-RUN touch /usr/bin/start-agent.sh
-RUN touch /usr/bin/docker-entrypoint.sh
-RUN chmod 777 /usr/bin/start-agent.sh
-RUN chmod 777 /usr/bin/docker-entrypoint.sh
-RUN #!/bin/bash / echo hello world > /usr/bin/docker-entrypoint.sh
-RUN #!/bin/bash / echo hi > /usr/local/docker-entrypoint.sh
+RUN apt update
+RUN apt install git 
+RUN cd /root
+RUN git clone https://code.aliyun.com/middlewarerace2018/services.git
+RUN git clone https://code.aliyun.com/middlewarerace2018/agent-demo.git
+RUN cp /root/services/docker-entrypoint.sh /usr/bin
+RUN cp /root/services/docker-entrypoint.sh /usr/local/bin
+RUN cp /root/agent-demo/start-agent.sh /usr/bin
+RUN cp /root/agent-demo/start-agent.sh /usr/local/bin
 ENTRYPOINT ["docker-entrypoint.sh"]
