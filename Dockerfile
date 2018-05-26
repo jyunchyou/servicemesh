@@ -6,11 +6,7 @@ FROM registry.cn-hangzhou.aliyuncs.com/aliware2018/debian-jdk8
 
 
 COPY --from=builder /usr/local/bin/docker-entrypoint.sh /usr/local/bin
-COPY start-agent.sh /usr/local/bin
 
-RUN set -ex \
- && chmod a+x /usr/local/bin/start-agent.sh \
- && mkdir -p /root/logs
 
 EXPOSE 8087
 
