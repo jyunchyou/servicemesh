@@ -1,7 +1,6 @@
-from ubuntu 14.04
+FROM ubuntu:14.04
 
-RUN update apt
-
-RUN mkdir /root/local/bin/docker-entrypoint.sh
+MAINTAINER jyunchyou “jyunchyou@gmail.com”
+RUN apt-get update
 RUN mkdir /root/local/bin/start-agent.sh
 ENTRYPOINT ["docker-entrypoint.sh"]
