@@ -3,6 +3,7 @@ FROM ubuntu:14.04
 MAINTAINER jyunchyou “jyunchyou@gmail.com”
 RUN apt update
 RUN apt install git 
+RUN y
 RUN cd /root
 RUN git clone https://code.aliyun.com/middlewarerace2018/services.git
 RUN git clone https://code.aliyun.com/middlewarerace2018/agent-demo.git
