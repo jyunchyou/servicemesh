@@ -9,7 +9,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 
 public class ConnecManager {
-    private EventLoopGroup eventLoopGroup = new NioEventLoopGroup(4);
+    private EventLoopGroup eventLoopGroup = new NioEventLoopGroup(1);
 
     private Bootstrap bootstrap;
 
@@ -46,8 +46,15 @@ public class ConnecManager {
 
     public void initBootstrap() {
 
+
+
+
         bootstrap = new Bootstrap()
                 .group(eventLoopGroup)
+
+
+
+
                 .option(ChannelOption.SO_KEEPALIVE, true)
                 .option(ChannelOption.TCP_NODELAY, true)
                 .option(ChannelOption.ALLOCATOR, UnpooledByteBufAllocator.DEFAULT)

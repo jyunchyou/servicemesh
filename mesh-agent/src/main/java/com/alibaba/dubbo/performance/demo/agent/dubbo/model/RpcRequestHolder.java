@@ -5,13 +5,13 @@ import java.util.concurrent.ConcurrentHashMap;
 public class RpcRequestHolder {
 
     // key: requestId     value: RpcFuture
-    private static ConcurrentHashMap<String,RpcFuture> processingRpc = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<String,byte[]> processingRpc = new ConcurrentHashMap<>();
 
-    public static void put(String requestId,RpcFuture rpcFuture){
+    public static void put(String requestId,byte[] rpcFuture){
         processingRpc.put(requestId,rpcFuture);
     }
 
-    public static RpcFuture get(String requestId){
+    public static byte[] get(String requestId){
         return processingRpc.get(requestId);
     }
 

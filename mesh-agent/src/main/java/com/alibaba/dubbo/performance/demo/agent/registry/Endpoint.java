@@ -2,9 +2,9 @@ package com.alibaba.dubbo.performance.demo.agent.registry;
 
 public class Endpoint {
     private final String host;
-    private final int port;
+    private final String port;
 
-    public Endpoint(String host,int port){
+    public Endpoint(String host,String port){
         this.host = host;
         this.port = port;
     }
@@ -13,7 +13,7 @@ public class Endpoint {
         return host;
     }
 
-    public int getPort() {
+    public String getPort() {
         return port;
     }
 
@@ -27,9 +27,5 @@ public class Endpoint {
         }
         Endpoint other = (Endpoint) o;
         return other.host.equals(this.host) && other.port == this.port;
-    }
-
-    public int hashCode(){
-        return host.hashCode() + port;
     }
 }

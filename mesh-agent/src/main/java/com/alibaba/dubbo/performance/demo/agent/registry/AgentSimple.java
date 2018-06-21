@@ -9,8 +9,6 @@ import com.alibaba.dubbo.performance.demo.agent.net.NettyServer;
 public class AgentSimple {
     private String type = System.getProperty("type");
 
-    private int dubboProtocolPort = Integer.parseInt(System.getProperty("netty.port"));
-
     private String etcdUrl = System.getProperty("etcd.url");
 
     private NettyBase nettyBase = null;

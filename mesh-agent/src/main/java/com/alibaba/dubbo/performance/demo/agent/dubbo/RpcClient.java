@@ -19,7 +19,7 @@ public class RpcClient {
         this.connectManager = new ConnecManager();
     }
 
-    public Object  invoke(String interfaceName, String method, String parameterTypesString, String parameter) throws Exception {
+    public void  invoke(String interfaceName, String method, String parameterTypesString, String parameter,byte[] hashcode) throws Exception {
 
         Channel channel = connectManager.getChannel();
 
@@ -38,19 +38,13 @@ public class RpcClient {
         request.setTwoWay(true);
         request.setData(invocation);
 
-        logger.info("requestId=" + request.getId());
 
-        RpcFuture future = new RpcFuture();
-        RpcRequestHolder.put(String.valueOf(request.getId()),future);
+
+        RpcRequestHolder.put(String.valueOf(request.getId()), hashcode);
+
 
         channel.writeAndFlush(request);
 
-        Object result = null;
-        try {
-            result = future.get();
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        return result;
     }
-}
+    }
+

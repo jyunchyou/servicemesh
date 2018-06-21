@@ -1,5 +1,7 @@
 package com.alibaba.dubbo.performance.demo.agent.registry;
 
+import com.alibaba.dubbo.performance.demo.agent.dubbo.RpcClient;
+import com.alibaba.dubbo.performance.demo.agent.net.HttpServer;
 import com.alibaba.dubbo.performance.demo.agent.net.NettyBase;
 import com.alibaba.dubbo.performance.demo.agent.net.NettyClient;
 import com.alibaba.dubbo.performance.demo.agent.net.NettyServer;
@@ -10,6 +12,7 @@ import com.coreos.jetcd.data.ByteSequence;
 import com.coreos.jetcd.kv.GetResponse;
 import com.coreos.jetcd.options.GetOption;
 import com.coreos.jetcd.options.PutOption;
+import io.netty.channel.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.text.MessageFormat;
@@ -17,7 +20,26 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
 
-public class EtcdRegistry implements IRegistry{
+public class EtcdRegistry implements IRegistry {
+
+    public static EtcdRegistry etcdRegistry;
+
+    static {
+        try {
+            etcdRegistry = new EtcdRegistry(System.getProperty("etcd.url"));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static RpcClient rpcClient = new RpcClient(EtcdRegistry.etcdRegistry);
+
+    public static List<Channel> channels;
+
+    public static List<Endpoint> endpoints;
+
+
+
     private Logger logger = LoggerFactory.getLogger(EtcdRegistry.class);
     // 该EtcdRegistry没有使用etcd的Watch机制来监听etcd的事件
     // 添加watch，在本地内存缓存地址列表，可减少网络调用的次数
@@ -27,18 +49,22 @@ public class EtcdRegistry implements IRegistry{
     private Lease lease;
     private KV kv;
     private long leaseId;
-    private int nettyPort = Integer.parseInt(System.getProperty("netty.port"));
     private NettyBase nettyBase = null;
-
+    private HttpServer httpServer = null;//接收Consumer消息
 
 
     //type,server.port
 
-    public EtcdRegistry(String registryAddress) {
+
+
+
+
+
+    public EtcdRegistry(String registryAddress) throws Exception {
 
         Client client = Client.builder().endpoints(registryAddress).build();
-        this.lease   = client.getLeaseClient();
-        this.kv      = client.getKVClient();
+        this.lease = client.getLeaseClient();
+        this.kv = client.getKVClient();
         try {
             this.leaseId = lease.grant(30).get().getID();
         } catch (Exception e) {
@@ -47,47 +73,31 @@ public class EtcdRegistry implements IRegistry{
 
         keepAlive();
 
-        String type = System.getProperty("type");   // 获取type参数
-        if ("provider".equals(type)){
-            // 如果是provider，去etcd注册服务
-            try {
-                int port = Integer.valueOf(System.getProperty("server.port"));
-                int nettyPort = Integer.valueOf(System.getProperty("netty.port"));
-                register("com.alibaba.dubbo.performance.demo.provider.IHelloService",port);
-                register("nettyPort",nettyPort);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            nettyBase = new NettyServer();
-            nettyBase.bind(nettyPort);
-        } else {
-            //如果是consumer端启动 则去etcd查找provide agent服务
-            try {
-                List<Endpoint> list =  find("nettyPort");
+            if("provider".equals(System.getProperty("type"))) {
+                // 如果是provider，去etcd注册服务
+                try {
+                    int port = Integer.valueOf(System.getProperty("server.port"));
+                     //register("com.alibaba.dubbo.performance.demo.provider.IHelloService", port);
+                    register("nettyPort", port + "," + Runtime.getRuntime().totalMemory());
 
-                for (Endpoint endpoint : list) {
-                    System.out.println(endpoint.toString());
-
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            }else {
 
 
-        }
-
+       }
 
     }
 
+
     // 向ETCD中注册服务
-    public void register(String serviceName,int port) throws Exception {
+    public void register(String serviceName,String port) throws Exception {
         // 服务注册的key为:    /dubbomesh/com.some.package.IHelloService/192.168.100.100:2000
-        String strKey = MessageFormat.format("/{0}/{1}/{2}:{3}",rootPath,serviceName,IpHelper.getHostIp(),String.valueOf(port));
+        String strKey = MessageFormat.format("/{0}/{1}/{2}:{3}",rootPath,serviceName,IpHelper.getHostIp(),port);
         ByteSequence key = ByteSequence.fromString(strKey);
         ByteSequence val = ByteSequence.fromString("");     // 目前只需要创建这个key,对应的value暂不使用,先留空
         kv.put(key,val, PutOption.newBuilder().withLeaseId(leaseId).build()).get();
-        logger.info("Register a new service at:" + strKey);
     }
 
     // 发送心跳到ETCD,表明该host是活着的
@@ -97,7 +107,6 @@ public class EtcdRegistry implements IRegistry{
                     try {
                         Lease.KeepAliveListener listener = lease.keepAlive(leaseId);
                         listener.listen();
-                        logger.info("KeepAlive lease:" + leaseId + "; Hex format:" + Long.toHexString(leaseId));
                     } catch (Exception e) { e.printStackTrace(); }
                 }
         );
@@ -117,7 +126,7 @@ public class EtcdRegistry implements IRegistry{
             String endpointStr = s.substring(index + 1,s.length());
 
             String host = endpointStr.split(":")[0];
-            int port = Integer.valueOf(endpointStr.split(":")[1]);
+            String port = endpointStr.split(":")[1];
 
             endpoints.add(new Endpoint(host,port));
         }
